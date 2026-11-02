@@ -15,6 +15,14 @@
 
 不覆蓋既有 `.env.local` 與學習資料；3000 埠被其他服務使用時會自動選擇附近可用埠。這是本機網站，不是公開部署。需支援 Node.js 24 的 Windows／macOS 系統；第一次需要網路連線。
 
+## 公司網路出現 407 Proxy 驗證
+
+Windows 啟動器會讀取 Windows 的系統 Proxy／自動設定，並以目前登入的 Windows 帳戶向該 Proxy 驗證；不會要求把密碼寫入檔案，也不會向下載網站傳送 Windows 帳密。Node.js 下載仍核對官方 SHA-256。
+
+若偵測到系統 Proxy，套件會改由相同的 Windows 網路流程下載，逐一核對 `package-lock.json` 的 SHA-512，放入專案 `.runtime` 快取後執行 npm 離線安裝。之後正常啟動不用重複下載。
+
+若更新後仍出現 407，代表 Proxy 未接受目前 Windows 身分，可能需要公司 IT 指定的驗證方式或存取權。請請 IT 確認能否透過公司核准方式存取 `nodejs.org` 與 `registry.npmjs.org`（HTTPS 443）。不要關閉 TLS 驗證、修改完整性校驗值，或將公司密碼填進腳本。新版不保證能通過每間公司的網路與裝置政策。
+
 ## 開始開發
 
 需要 Node.js 24+、npm 與 Chromium。使用現有 checkout；雲端任務本身已隔離，不建立額外 worktree。

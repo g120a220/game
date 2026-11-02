@@ -16,6 +16,8 @@ export function npmCli(){
 async function getPage(port){try{const r=await fetch(`http://localhost:${port}`,{signal:AbortSignal.timeout(1800)});return r.ok&&(await r.text()).includes('國小冒險學院');}catch{return false;}}
 async function portFree(port){return new Promise((resolve,reject)=>{const server=createServer();server.once('error',e=>e.code==='EADDRINUSE'?resolve(false):reject(e));server.listen(port,'127.0.0.1',()=>server.close(()=>resolve(true)));});}
 export async function choosePort(first=3000){for(let port=first;port<first+20;port++){if(await portFree(port))return {port,reuse:false};if(await getPage(port))return {port,reuse:true};}throw new Error('無法找到可用的本機連接埠，請關閉舊視窗後重試。');}
+export function cacheInstallArgs(root){const cache=join(root,'.runtime','npm-cache');return existsSync(join(cache,'.ready-'+fingerprint(root)))?['--offline','--cache',cache]:[];}
+async function prepareWindowsCache(root,env){if(process.platform!=='win32')return;await new Promise((resolve,reject)=>{const p=spawn('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File',join(root,'scripts/launcher/prepare-windows-cache.ps1'),'-NodeExecutable',process.execPath,'-NpmCli',npmCli(),'-Fingerprint',fingerprint(root)],{cwd:root,env,stdio:'inherit'});p.once('error',reject);p.once('exit',code=>code===0?resolve():reject(new Error('公司 Proxy 套件準備未完成，請查看上方訊息；不要在啟動檔填入密碼。')));});}
 async function run(args,root,env){return new Promise((resolve,reject)=>{const child=spawn(process.execPath,args,{cwd:root,env,stdio:'inherit'});child.once('error',reject);child.once('exit',(code,signal)=>code===0?resolve():reject(new Error(`準備程序未完成（${signal||code}），請檢查上方訊息及網路後再點啟動檔。`)));});}
 export async function waitForReady(port,child,timeout=120000){const until=Date.now()+timeout;while(Date.now()<until){if(child.exitCode!==null||child.signalCode)throw new Error('網站啟動失敗，請查看上方錯誤訊息。');if(await getPage(port))return;await new Promise(r=>setTimeout(r,500));}throw new Error('網站啟動逾時，請檢查上方訊息後再試一次。');}
 function openBrowser(url){if(process.env.ACADEMY_NO_BROWSER==='1')return;let command,args;if(process.platform==='win32'){command='rundll32.exe';args=['url.dll,FileProtocolHandler',url];}else if(process.platform==='darwin'){command='open';args=[url];}else{command='xdg-open';args=[url];}const opener=spawn(command,args,{stdio:'ignore'});opener.on('error',()=>console.log(`請在瀏覽器開啟：${url}`));opener.unref();}
@@ -27,7 +29,7 @@ export async function launch(){
  if(reuse){console.log(`網站已開啟：${url}`);openBrowser(url);return;}
  const env={...process.env,LOCAL_DEMO_MODE:'true',NEXT_TELEMETRY_DISABLED:'1'};
  if(!existsSync(join(projectRoot,'.env.local')))copyFileSync(join(projectRoot,'.env.example'),join(projectRoot,'.env.local'));
- if(needsInstall(projectRoot)){console.log('第一次啟動：正在安裝必要套件，可能需要幾分鐘，請保持網路連線。');await run([npmCli(),'ci','--no-audit','--no-fund'],projectRoot,env);writeFileSync(join(projectRoot,'node_modules','.academy-launcher-lock'),fingerprint(projectRoot));}
+ if(needsInstall(projectRoot)){console.log('第一次啟動：正在安裝必要套件，可能需要幾分鐘，請保持網路連線。');await prepareWindowsCache(projectRoot,env);await run([npmCli(),'ci','--no-audit','--no-fund',...cacheInstallArgs(projectRoot)],projectRoot,env);writeFileSync(join(projectRoot,'node_modules','.academy-launcher-lock'),fingerprint(projectRoot));}
  await run(['--import','tsx','scripts/init-db.ts'],projectRoot,env);
  const next=join(projectRoot,'node_modules/next/dist/bin/next');
  const server=spawn(process.execPath,[next,'dev','--webpack','--hostname','127.0.0.1','--port',String(port)],{cwd:projectRoot,env,stdio:'inherit'});

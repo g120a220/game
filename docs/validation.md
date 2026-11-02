@@ -59,3 +59,9 @@ Turbopack／tsx CLI 的 IPC 在沙箱受限；使用 webpack、Next 官方 TypeS
 22 項單元／資料庫測試通過，包含安裝狀態偵測、鎖定檔變更、npm 解析與官方下載校驗設定一致性；TypeScript 檢查通過。Mac shell 腳本通過 bash 語法檢查。另在 Linux 的全新解壓目錄（路徑包含中文與空白）實際完成首次 npm ci、自動初始化及啟動，使用 Chromium 操作授權與答題，再停止、重啟，確認未重裝依賴且資料保留。作業系統開啟瀏覽器命令以替身驗證網址傳入。
 
 此環境沒有 Windows／macOS 桌面，未宣稱原生雙擊、PowerShell 或 macOS Gatekeeper 端到端驗收。Windows/macOS 第一次執行可能需要作業系統允許開啟；組織電腦政策不能由啟動器繞過。安裝套件與自動下載執行環境時需要網路。
+
+## 公司 Proxy 407 修正
+
+Windows 下載共用 helper 讀取 Windows 系統 Proxy／PAC，僅對系統 Proxy 使用目前 Windows 帳戶的預設認證。未使用目的站 `UseDefaultCredentials`，沒有將帳密存入 URL、環境變數或設定檔。Node.js 維持官方 SHA-256；npm tarball 維持鎖定檔 SHA-512，驗證後匯入本機 npm cache，再執行 offline ci，避免 npm 再次遇到不支援的 Windows 整合 Proxy 驗證。
+
+25 項測試與型別檢查通過。實際依當前平台的鎖定檔下載並驗證 117 個 tarball，匯入全新 npm cache，並以 `npm ci --offline` 完整安裝 117 個套件成功，未略過安裝腳本。最初沙箱阻擋 esbuild 原生執行，允許原生子程序後重跑通過。測試環境不具 Windows／公司 Proxy，Windows 帳戶驗證與企業 CA／PAC 的相容性仍須使用者電腦驗證；若 Proxy 不接受目前帳戶，新版只提供明確 IT 協助訊息，不繞過 Proxy 或停用 TLS／完整性檢查。

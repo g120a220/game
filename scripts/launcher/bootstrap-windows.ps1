@@ -1,5 +1,6 @@
 $ErrorActionPreference = 'Stop'
 try {
+    . (Join-Path $PSScriptRoot 'windows-network.ps1')
     $root = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
     Set-Location -LiteralPath $root
     $existing = Get-Command node.exe -ErrorAction SilentlyContinue
@@ -20,9 +21,8 @@ try {
         $tempdir = Join-Path $root ('.runtime/download-' + [guid]::NewGuid().ToString('N'))
         New-Item -ItemType Directory -Path $tempdir -Force | Out-Null
         try {
-            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
             $archive = Join-Path $tempdir $entry.filename
-            Invoke-WebRequest -UseBasicParsing -Uri ("https://nodejs.org/dist/" + $entry.version + '/' + $entry.filename) -OutFile $archive
+            Save-AcademyDownload -Uri ([uri]("https://nodejs.org/dist/" + $entry.version + '/' + $entry.filename)) -OutFile $archive
             $actual = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
             if ($actual -ne $entry.sha256) { throw 'Node.js checksum mismatch. Installation stopped.' }
             Expand-Archive -LiteralPath $archive -DestinationPath (Join-Path $root '.runtime') -Force
