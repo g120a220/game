@@ -1,0 +1,4 @@
+# Preserve Windows command line endings in source ZIPs and ignore CR as whitespace.
+*.cmd -text whitespace=cr-at-eol
+*.command text eol=lf
+*.sh text eol=lf
