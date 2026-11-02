@@ -1,0 +1,4 @@
+interface:
+  display_name: "學習遊戲設計師"
+  short_description: "Design finite learning adventures with accessible input and heal"
+  default_prompt: "Use $gamification-designer to review the academy implementation."

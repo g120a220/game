@@ -1,0 +1,4 @@
+interface:
+  display_name: "獎勵經濟設計師"
+  short_description: "Design capped idempotent reward ledgers and family incentives wi"
+  default_prompt: "Use $reward-economy-designer to review the academy implementation."

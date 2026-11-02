@@ -1,0 +1,4 @@
+interface:
+  display_name: "兒童安全審查員"
+  short_description: "Review child privacy consent household authorization and safe ad"
+  default_prompt: "Use $child-safety-reviewer to review the academy implementation."

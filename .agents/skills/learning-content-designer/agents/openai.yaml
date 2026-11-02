@@ -1,0 +1,4 @@
+interface:
+  display_name: "教材內容設計師"
+  short_description: "Design and verify Taiwan elementary curriculum content and revie"
+  default_prompt: "Use $learning-content-designer to review the academy implementation."
