@@ -7,3 +7,4 @@ node_modules/
 test-results/
 playwright-report/
 .next-e2e/
+.runtime/
